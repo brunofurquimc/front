@@ -19,6 +19,17 @@ export const actions = {
       return Promise.reject(error)
     }
   },
+  async filter(store, payload) {
+    try {
+      const response = await this.$api.$post(
+        '/reports/orders/filter',
+        payload
+      )
+      return Promise.resolve(response)
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
 }
 
 export const getters = {

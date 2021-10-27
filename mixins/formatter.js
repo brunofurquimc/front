@@ -36,5 +36,14 @@ export const formatter = {
       const dates = dateInfo.split('-')
       return `${dates[2]}/${dates[1]}/${dates[0]} ${timeInfo}`
     },
+    currencyToValue(currency) {
+      let value = currency.replace('R$ ', '');
+
+      value = value.split(',')
+      if (value.length > 1) value = `${value[0].replaceAll('.', '')}.${value[1]}`
+      else value = value[0].replace('.', ',')
+
+      return +value;
+    }
   }
 }

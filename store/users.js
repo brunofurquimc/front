@@ -60,6 +60,73 @@ export const actions = {
       return defaultErrorReturn(error)
     }
   },
+  async getCustomers({ commit }, establishment_id) {
+    try {
+      const response = await this.$api.$get(`/users/customers?establishment=${establishment_id}`);
+      console.log(response);
+      return Promise.resolve(response);
+    } catch (error) {
+      console.log(error, error.response)
+      return defaultErrorReturn(error)
+    }
+  },
+  async getCustomer({ commit }, customer_id) {
+    try {
+      const response = await this.$api.$get(`/users/customer?customer=${customer_id}`);
+      console.log(response);
+      return Promise.resolve(response);
+    } catch (error) {
+      console.log(error, error.response)
+      return defaultErrorReturn(error)
+    }
+  },
+  async editCustomer({ commit }, payload) {
+    try {
+      const response = await this.$api.$post('/users/editCustomer', payload);
+      return Promise.resolve(response);
+    } catch (error) {
+      console.log(error, error.response)
+      return defaultErrorReturn(error)
+    }
+  },
+  async getVendors({ commit }, establishment_id) {
+    try {
+      const response = await this.$api.$get(`/users/vendors?establishment=${establishment_id}`)
+      console.log(response)
+      return Promise.resolve(response)
+    } catch (error) {
+      console.log(error, error.response)
+      return defaultErrorReturn(error)
+    }
+  },
+  async getVendor({ commit }, vendor_id) {
+    try {
+      const response = await this.$api.$get(`/users/vendor?vendor=${vendor_id}`);
+      console.log(response)
+      return Promise.resolve(response)
+    } catch (error) {
+      console.log(error, error.response)
+      return defaultErrorReturn(error)
+    }
+  },
+  async editVendor({ commit }, payload) {
+    try {
+      const response = await this.$api.$post('/users/editVendor', payload);
+      return Promise.resolve(response)
+    } catch (error) {
+      console.log(error, error.response)
+      return defaultErrorReturn(error)
+    }
+  },
+  async deleteVendor({ commit }, id) {
+    try {
+      const response = await this.$api.$post('/users/deleteVendor', { id });
+      return Promise.resolve(response);
+    } catch (error) {
+      console.log(error, error.response)
+      return defaultErrorReturn(error)
+    }
+  }
 }
 
 export const getters = {
