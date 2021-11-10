@@ -1,45 +1,11 @@
 <template>
   <div id="dashboard-container">
-    <div class="filter-dialog">
-      <v-dialog v-model="filter.dialog" persistent width="400">
-        <v-card class="sale-dialog">
-          <v-card-title>Filtrar dados da operação</v-card-title>
-          <v-form ref="filter">
-            <div class="form-container px-5">
-              <v-row justify="center">
-                <v-col cols="auto">
-                  <v-date-picker
-                    v-model="filter.date"
-                    range
-                    color="teal darken-1"
-                    landscape
-                    locale="pt-br"
-                    no-title
-                  ></v-date-picker>
-                </v-col>
-              </v-row>
-            </div>
-          </v-form>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              color="red darken-1"
-              text
-              @click="filter.dialog = false; filter.date = []"
-            >
-              Cancelar
-            </v-btn>
-            <v-btn
-              color="teal darken-1"
-              text
-              @click="filterOrders"
-            >
-              Filtrar
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </div>
+    <delio-filter
+      @filter="filterOrders"
+      title="Filtrar dados da operação"
+      :open="dialog.open"
+      @close="dialog.open = false"
+    />
     <div class="statistics">
       <v-row justify="center" class="dashboard-cards">
         <v-col cols="auto">
@@ -50,7 +16,7 @@
             loader-height="5"
             @mouseenter="filterCard.scale = true"
             @mouseleave="filterCard.scale = false"
-            @click="filter.dialog = true"
+            @click="dialog.open = true"
             :style="filterCard.scale ? { transform: 'scale(1.05)' } : {}"
           >
             <v-app-bar flat color="rgba(0, 0, 0, 0)" class="fill-height">
@@ -122,21 +88,43 @@
     <div class="graphs">
       <v-row justify="center">
         <v-col cols="auto" v-for="(graph, index) in graphs" :key="index">
-          <graph-card :graph="graph" />
+          <delio-graph :graph="graph" />
         </v-col>
       </v-row>
+    </div>
+    <div class="divider">
+      <v-card elevation="5" height="100%">
+        <v-card-text>
+          <v-row
+            justify="start"
+            align-content="center"
+            align="center"
+            no-gutters
+          >
+            <v-icon class="mr-5">mdi-microsoft-excel</v-icon>
+            <span class="font-weight-bold"> Exportação de relatórios </span>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </div>
+    <div class="report-cards">
+      <delio-reports :loading="loading_dashboard_cards" @extract="extract" />
     </div>
   </div>
 </template>
 
 <script>
-import graphCard from "~/components/graph";
+import graph from "~/components/graph";
+import filter from "~/components/filter";
+import reports from "~/components/reports";
 import { formatter } from "~/mixins/formatter";
 
 export default {
   mixins: [formatter],
   components: {
-    "graph-card": graphCard,
+    "delio-graph": graph,
+    "delio-filter": filter,
+    "delio-reports": reports,
   },
   async beforeMount() {
     await this.filterOrders();
@@ -144,6 +132,9 @@ export default {
   },
   data() {
     return {
+      dialog: {
+        open: false,
+      },
       filter: {
         dialog: false,
         date: [],
@@ -217,12 +208,33 @@ export default {
     };
   },
   methods: {
+    async extract(key) {
+      const response = await this.$store.dispatch(
+        `reports/getReport`,
+        {
+          date: this.filter.date,
+          key,
+        }
+      );
+      if (response !== undefined) this.downloadCSV(key, response)
+      else {
+        this.$toast.warning('Não existem dados disponíveis para este relatório', 'Atenção')
+      }
+    },
+    downloadCSV(key, csv) {
+      console.log(key)
+      const anchor = document.createElement("a");
+      anchor.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+      anchor.target = "_blank";
+      anchor.download = `${key}.csv`;
+      anchor.click();
+    },
     async filterOrders() {
       this.loading_dashboard_cards = true;
-      let payload = {}
+      let payload = {};
       if (this.filter.date != []) payload.date = this.filter.date.sort();
-      const response = await this.$store.dispatch("orders/filter", payload)
-      this.parseGeneralInfo(response)
+      const response = await this.$store.dispatch("orders/filter", payload);
+      this.parseGeneralInfo(response);
       this.loading_dashboard_cards = false;
     },
     async getGeneralInfo() {
@@ -290,8 +302,45 @@ export default {
     transform: translateX(-50%);
     height: auto;
     width: 100%;
-    margin-top: 100px;
-    margin-bottom: 100px;
+    padding-top: 100px;
+  }
+
+  .divider {
+    position: relative;
+    height: 50px;
+    width: 100%;
+    .v-card.v-sheet.theme--light {
+      border-radius: 0px;
+      background-color: $terciary;
+
+      .v-card__text {
+        height: 100%;
+        font-size: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+        color: white;
+
+        .v-icon.notranslate.mr-5.mdi.theme--light {
+          font-size: 36px;
+          color: white;
+        }
+      }
+    }
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  .report-cards {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    width: 100%;
+    padding-bottom: 200px;
   }
 }
 </style>
